@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LootLab Key Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(-45deg, #28a745, #20c997, #17a2b8, #6f42c1);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            width: 90%;
+            max-width: none;
+        }
+
+        .generate-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .generate-btn:hover {
+            background: #5a6268;
+        }
+
+        .key-display {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .key-text {
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .copy-btn.show {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="generate-btn" id="generateBtn" onclick="generateKey()">
+            Create Your Key!
+        </button>
+        
+        <div class="key-display" id="keyDisplay">
+        </div>
+        
+        <button class="copy-btn" id="copyBtn" onclick="copyKey()">
+            Copy Key
+        </button>
+    </div>
+
+    <script>
+        let currentKey = '';
+        let keyData = null;
+
+        function generateRandomKey() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            const segments = 4;
+            const segmentLength = 4;
+            let key = '';
+            
+            for (let i = 0; i < segments; i++) {
+                if (i > 0) key += '-';
+                for (let j = 0; j < segmentLength; j++) {
+                    key += characters.charAt(Math.floor(Math.random() * characters.length));
+                }
+            }
+            
+            return key;
+        }
+
+        function generateKey() {
+            const btn = document.getElementById('generateBtn');
+            const keyDisplay = document.getElementById('keyDisplay');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            btn.innerHTML = 'Generating...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                currentKey = generateRandomKey();
+                keyDisplay.innerHTML = `<div class="key-text">${currentKey}</div>`;
+                copyBtn.classList.add('show');
+                btn.innerHTML = 'Key Generated';
+                btn.style.background = '#6c757d';
+                btn.style.cursor = 'not-allowed';
+                storeKey(currentKey);
+            }, 1000);
+        }
+
+        function copyKey() {
+            if (currentKey) {
+                navigator.clipboard.writeText(currentKey).then(() => {
+                    const copyBtn = document.getElementById('copyBtn');
+                    copyBtn.innerHTML = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = 'Copy Key';
+                    }, 1000);
+                });
+            }
+        }
+
+        function storeKey(key) {
+            keyData = {
+                key: key,
+                created: Date.now(),
+                expires: Date.now() + (24 * 60 * 60 * 1000),
+                used: false
+            };
+        }
+
+        // API endpoint for Roblox to validate keys
+        function validateKeyAPI(inputKey) {
+            if (!keyData || keyData.used) return false;
+            if (Date.now() > keyData.expires) return false;
+            if (inputKey !== keyData.key) return false;
+            
+            keyData.used = true; // Mark key as used
+            return true;
+        }
+
+        // Expose validation function globally for HTTP requests
+        window.validateKey = validateKeyAPI;
+
+        function validateKey(inputKey) {
+            return inputKey === currentKey;
+        }
+
+        // Auto-close website after 1 hour
+        setTimeout(() => {
+            document.body.innerHTML = `
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    background: #333;
+                    color: white;
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                ">
+                    <div>
+                        <h1>Session Expired</h1>
+                        <p>This key generator has closed after 1 hour.</p>
+                        <p>Please refresh the page to generate new keys.</p>
+                    </div>
+                </div>
+            `;
+        }, 3600000); // 3600000 milliseconds = 1 hour
+    </script>
+</body>
+</html>
